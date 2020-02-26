@@ -17,6 +17,9 @@
 		".*Stateless cannot be resolved to a type.*",
 		".*The import javax.ejb cannot be resolved.*"
 	],
+	"ejb-multi-server": [
+		".*Endorsed directory .* is missing. You may need to a perform a Maven command line build in order to create it.*"
+	],
 	"ejb-security-interceptors": [
 		".*Quick Fix should not be enabled.*",
 		".*cvc-complex-type.2.4.a: Invalid content was found starting with element 'jee:interceptor-binding'.*",

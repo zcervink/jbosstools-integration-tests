@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2017 Red Hat, Inc.
+ * Copyright (c) 2017-2020 Red Hat, Inc.
  * Distributed under license by Red Hat, Inc. All rights reserved.
  * This program is made available under the terms of the
  * Eclipse Public License v1.0 which accompanies this distribution,
@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.eclipse.reddeer.common.logging.Logger;
@@ -43,6 +44,7 @@ import org.eclipse.reddeer.eclipse.wst.server.ui.cnf.Server;
 import org.eclipse.reddeer.eclipse.wst.server.ui.cnf.ServerModule;
 import org.eclipse.reddeer.eclipse.wst.server.ui.cnf.ServersView2;
 import org.eclipse.reddeer.eclipse.wst.server.ui.cnf.ServersViewEnums.ServerState;
+import org.eclipse.reddeer.eclipse.wst.server.ui.wizard.ModifyModulesDialog;
 import org.eclipse.reddeer.junit.annotation.RequirementRestriction;
 import org.eclipse.reddeer.junit.internal.runner.ParameterizedRequirementsRunnerFactory;
 import org.eclipse.reddeer.junit.requirement.matcher.RequirementMatcher;
@@ -51,6 +53,7 @@ import org.eclipse.reddeer.requirements.jre.JRERequirement.JRE;
 import org.eclipse.reddeer.requirements.server.ServerRequirementState;
 import org.eclipse.reddeer.swt.api.TreeItem;
 import org.eclipse.reddeer.swt.impl.browser.InternalBrowser;
+import org.eclipse.reddeer.swt.impl.button.PushButton;
 import org.eclipse.reddeer.swt.impl.menu.ContextMenuItem;
 import org.eclipse.reddeer.swt.impl.toolbar.DefaultToolItem;
 import org.eclipse.reddeer.workbench.core.condition.JobIsRunning;
@@ -63,10 +66,13 @@ import org.eclipse.ui.IViewReference;
 import org.jboss.ide.eclipse.as.reddeer.server.deploy.DeployOnServer;
 import org.jboss.ide.eclipse.as.reddeer.server.requirement.ServerRequirement.JBossServer;
 import org.jboss.tools.central.reddeer.api.JavaScriptHelper;
+import org.jboss.tools.central.reddeer.utils.CentralUtils;
 import org.jboss.tools.central.reddeer.wizards.NewProjectExamplesWizardDialogCentral;
 import org.jboss.tools.central.test.ui.reddeer.internal.CentralBrowserIsLoading;
 import org.jboss.tools.central.test.ui.reddeer.internal.ErrorsReporter;
 import org.jboss.tools.common.reddeer.utils.StackTraceUtils;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -97,6 +103,9 @@ public class HTML5Parameterized {
 	private static final String MAVEN_SETTINGS_PATH = System.getProperty("maven.config.file") == null
 			? "./target/classes/settings.xml"
 			: System.getProperty("maven.config.file");
+	private static final String BLACKLIST_ERRORS_REGEXES_FILE = "resources/blacklist-examples-errors-regexes.json";
+	private JSONObject blacklistErrorsFileContents;
+	
 	
 	private static String FULL_SERVER_NAME = "";
 	private static DefaultEditor centralEditor;
@@ -201,41 +210,46 @@ public class HTML5Parameterized {
 
 	@Test
 	public void testProject() {
-		log.error("Processing example: " + project.getName());
-		log.error("\twith description: " + project.getDescription());
 		processExample(project.getName(), project.getDescription());
 	}
 
 	/**
 	 * Imports current example, checks for warnings/errors, tries to deploy it to
-	 * server and finally deletes it.
+	 * server.
 	 * 
-	 * @param exampleName
+	 * @param exampleName, description
 	 */
 	private void processExample(String exampleName, String description) {
-		boolean skip = false;
+		
+		log.error("Processing example: " + exampleName);
+		log.error("\twith description: " + description);
+		
+		// import quickstart
 		jsHelper.searchFor(description);
-		String[] examples = jsHelper.getExamples();
-		if (examples.length > 1) {
-			fail("Muj fail! :-D");
-		}
-		// import
 		try {
 			importExample(exampleName);
 		} catch (Exception e) {
-			skip = true;
 			fail("Error importing example: " + StackTraceUtils.stackTraceToString(e));
+			return;
 		}
 
-		org.jboss.tools.central.reddeer.projects.Project currentProject;
-
-		if (!skip && !getProjectName().contains("crash")) {
+		// check errors in the Problems view
+		if (!getProjectName().contains("crash")) {
 			// TODO skip tests failing on purpose
+			org.jboss.tools.central.reddeer.projects.Project currentProject;
 			currentProject = new org.jboss.tools.central.reddeer.projects.Project(exampleName, getProjectName());
-			// check for errors/warning
-			checkErrorLog(currentProject);
+			
+			// check for deployment-blocking errors
+			// -> if all of them are blacklisted -> just skip the deployment
+			// -> if at least one deployment-blocking errors is not blacklisted, fail the test
+			int deploymentBlockingErrorsCount = getDeploymentBlockingErrorsCount(currentProject);
+			if (deploymentBlockingErrorsCount > 0) {
+				return;
+			}
 		}
 		
+		// deploy the quickstart
+		// multimodular project
 		if (isProjectMultimodular(exampleName)) {
 			List<Project> deployableModuls = findDeployableProjects();
 			String topNodeProjectName = "jboss-" + exampleName + "-ear";
@@ -258,7 +272,33 @@ public class HTML5Parameterized {
 			checkDeployedSubmodules(topNodeProjectName, deployableModuls);
 			// undeploy project
 			ds.unDeployModule(topNodeProjectName, FULL_SERVER_NAME);
-		} else {
+		}
+		// the'inter-app' quickstart requires batch deployment and specific testing
+		// (described in the README.md)
+		else if (exampleName.equals("inter-app")) {
+			ServersView2 serversView = new ServersView2();
+			serversView.open();
+			Server server = serversView.getServers().get(0);
+
+			ModifyModulesDialog mmd = server.addAndRemoveModules();
+			new PushButton("Add All >>").click();
+			mmd.finish();
+
+			String[] deployableProjectsToTest = { "jboss-inter-app-appA", "jboss-inter-app-appB" };
+			for (String project : deployableProjectsToTest) {
+				DeployOnServer ds = new DeployOnServer();
+				// deploy project
+				ds.deployProject(project, FULL_SERVER_NAME);
+				// check deployed project
+				checkDeployedProject(project);
+			}
+
+			ModifyModulesDialog mmd2 = server.addAndRemoveModules();
+			new PushButton("<< Remove All").click();
+			mmd2.finish();
+		}
+		// other cases
+		else {
 			for (Project project : findDeployableProjects()) {
 				DeployOnServer ds = new DeployOnServer();
 				// deploy project
@@ -269,10 +309,6 @@ public class HTML5Parameterized {
 				ds.unDeployModule(project.getName(), FULL_SERVER_NAME);
 			}
 		}
-
-		// delete
-		WorkbenchShellHandler.getInstance().closeAllNonWorbenchShells();
-		new ProjectExplorer().deleteAllProjects(true);
 	}
 
 	private void importExample(String exampleName) {
@@ -283,25 +319,33 @@ public class HTML5Parameterized {
 		wizardDialog.finish(exampleName);
 	}
 
-	private void checkErrorLog(org.jboss.tools.central.reddeer.projects.Project p) {
+	private int getDeploymentBlockingErrorsCount(org.jboss.tools.central.reddeer.projects.Project p) {
 		new WaitWhile(new JobIsRunning(), TimePeriod.LONG);
 		ProblemsView pv = new ProblemsView();
 		pv.open();
 		StringBuilder sb = new StringBuilder("Errors after project example import\n");
 		boolean errorsArePresent = false;
 		List<Problem> errorList = new ArrayList<Problem>();
-		// get all errors
+		
+		// get all errors from the Problems view
 		for (Problem error : pv.getProblems(ProblemType.ERROR)) {
 			errorList.add(error);
 		}
+		int errorsCount = errorList.size();
+		
 		// filter blacklisted errors
 		Iterator<Problem> it = errorList.iterator();
 		while (it.hasNext()) {
 			Problem oo = it.next();
 			if (oo.getResource().equals("README.md")) {
 				it.remove();
+				errorsCount--;
+			}
+			else if (isErrorOfSpecificQuickstartOnBlacklist(oo.getDescription(), p.getName())) {
+				it.remove();
 			}
 		}
+		
 		// process errors
 		for (Problem error : errorList) {
 			sb.append(error.getDescription() + "\n");
@@ -310,10 +354,13 @@ public class HTML5Parameterized {
 		for (Problem warning : pv.getProblems(ProblemType.WARNING)) {
 			reporter.addWarning(p, warning.getDescription());
 		}
+		
+		// fail the test if any not-blacklisted error remains
 		if (errorsArePresent) {
 			fail(sb.toString());
 		}
-
+		
+		return errorsCount;
 	}
 
 	private String getProjectName() {
@@ -390,5 +437,24 @@ public class HTML5Parameterized {
 			assertTrue("Deployable project from Project Explorer has not been found deployed in the Servers view.",
 					moduleDeployed);
 		}
+	}
+	
+	/**
+	 * Checks if the given error message description is in the regex blacklist file
+	 */
+	public boolean isErrorOfSpecificQuickstartOnBlacklist(String errorMsg, String quickstartName) {
+		if (blacklistErrorsFileContents ==  null) {
+			blacklistErrorsFileContents = CentralUtils.loadBlacklistErrorsFile(BLACKLIST_ERRORS_REGEXES_FILE);
+		}
+
+		JSONArray regexArray = (JSONArray) (blacklistErrorsFileContents).get(quickstartName);
+
+		for (int i = 0; i < regexArray.size(); i++) {
+			if (Pattern.compile((String) regexArray.get(i)).matcher(errorMsg).find()) {
+				return true;
+			}
+		}
+
+		return false;
 	}
 }

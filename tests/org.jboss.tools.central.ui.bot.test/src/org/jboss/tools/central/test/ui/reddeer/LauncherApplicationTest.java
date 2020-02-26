@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2018 Red Hat, Inc.
+ * Copyright (c) 2018-2020 Red Hat, Inc.
  * Distributed under license by Red Hat, Inc. All rights reserved.
  * This program is made available under the terms of the
  * Eclipse Public License v1.0 which accompanies this distribution,
@@ -16,14 +16,18 @@ import static org.junit.Assert.fail;
 import java.util.List;
 import java.util.regex.Pattern;
 
+import org.eclipse.reddeer.common.exception.WaitTimeoutExpiredException;
 import org.eclipse.reddeer.common.logging.Logger;
 import org.eclipse.reddeer.common.wait.TimePeriod;
 import org.eclipse.reddeer.common.wait.WaitWhile;
+import org.eclipse.reddeer.common.wait.WaitUntil;
 import org.eclipse.reddeer.eclipse.ui.navigator.resources.ProjectExplorer;
 import org.eclipse.reddeer.eclipse.ui.problems.Problem;
 import org.eclipse.reddeer.eclipse.ui.views.markers.ProblemsView;
 import org.eclipse.reddeer.eclipse.ui.views.markers.ProblemsView.ProblemType;
 import org.eclipse.reddeer.junit.runner.RedDeerSuite;
+import org.eclipse.reddeer.swt.condition.ShellIsAvailable;
+import org.eclipse.reddeer.swt.impl.button.PushButton;
 import org.eclipse.reddeer.swt.impl.shell.DefaultShell;
 import org.eclipse.reddeer.swt.impl.toolbar.DefaultToolItem;
 import org.eclipse.reddeer.workbench.core.condition.JobIsRunning;
@@ -85,7 +89,14 @@ public class LauncherApplicationTest {
 		wizard.finish(TimePeriod.getCustom(2500));
 		log.step("Import project finished");
 
-		checkForErrors();
+		// issue NODE-529
+		try {
+			checkForErrors(); // issue appears randomly at several places inside the checkForErrors() method
+		} catch (WaitTimeoutExpiredException e) {
+			new ShellIsAvailable("Missing node.js");
+			new PushButton("OK").click();
+			checkForErrors();
+		}
 	}
 
 	@Test
@@ -109,7 +120,14 @@ public class LauncherApplicationTest {
 		wizard.finish(TimePeriod.getCustom(2500));
 		log.step("Import project finished");
 
-		checkForErrors();
+		// issue NODE-529
+		try {
+			checkForErrors(); // issue appears randomly at several places inside the checkForErrors() method
+		} catch (WaitTimeoutExpiredException e) {
+			new ShellIsAvailable("Missing node.js");
+			new PushButton("OK").click();
+			checkForErrors();
+		}
 	}
 
 	@Test
@@ -166,7 +184,7 @@ public class LauncherApplicationTest {
 	/**
 	 * Checks for errors in Problems View. Fails if there is some
 	 */
-	public void checkForErrors() {
+	public void checkForErrors() throws WaitTimeoutExpiredException {		
 		ProblemsView problemsView = new ProblemsView();
 		problemsView.open();
 		List<Problem> errors = problemsView.getProblems(ProblemType.ERROR);
