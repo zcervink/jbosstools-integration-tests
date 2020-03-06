@@ -47,37 +47,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(RedDeerSuite.class)
 @SuiteClasses({	
-	AsYouTypeValidationTestCDI10.class,
-	BeanValidationQuickFixTestCDI10.class,
 	NullValuesInjectionTestCDI10.class,
-	DecoratorFromWebBeanTestCDI10.class,
-	DecoratorValidationQuickFixTestCDI10.class,
-	AllAssignableDialogTestCDI10.class,
-	AssignableDialogFilterTestCDI10.class,
-	IBindingValidationQuickFixTestCDI10.class,
-	InterceptorValidationQuickFixTestCDI10.class,
-	NamedComponentsSearchingTestCDI10.class,
-	NamedRefactoringTestCDI10.class,
-	BeanInjectOpenOnTestCDI10.class,
-	FindObserverEventTestCDI10.class,
-	QualifierValidationQuickFixTestCDI10.class,
-	ScopeValidationQuickFixTestCDI10.class,
-	StereotypeValidationQuickFixTestCDI10.class,
-	BeansXMLCompletionTestCDI10.class,
-	BeansXMLOpenOnTestCDI10.class,
-	BeansXMLBeansEditorTestCDI10.class,
-	BeansXMLValidationTestCDI10.class,
-	BeansXMLAsYouTypeValidationTestCDI10.class,
-	BeansXMLValidationQuickFixTestCDI10.class,
-	CDIValidatorTestCDI10.class,
-	WeldBuiltInContextsTestCDI10.class,
-	WeldExcludeTestCDI10.class,
-	WeldParametersAnnotationTestCDI10.class,
-	WeldScanTestCDI10.class,
-	CDIWebProjectWizardTestCDI10.class,
-	DynamicWebProjectWithCDITestCDI10.class,
-	EjbProjectWithCDITestCDI10.class,
-	UtilityProjectWithCDITestCDI10.class,
 })
 public class CDI10SuiteTest {
 

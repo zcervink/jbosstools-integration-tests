@@ -17,17 +17,7 @@ import org.junit.runners.Suite.SuiteClasses;
 
 @RunWith(RedDeerSuite.class)
 @SuiteClasses({
-	ValidationsInPreferenceTest.class,
-	ExcludesAnnotationTest.class,
-	ConfigPropertyAnnotationTest.class,
-	MessageBundleAnnotationTest.class,
-	JmxBroadcaster.class,
-	ExceptionHandlerAnnotationTest.class,
-	ExceptionHandlerMethodsTest.class,
-	SecuresAnnotationTest.class,
-	SecuredAnnotationTest.class,
-	MessageContextAnnotationTest.class,
-	PartialBeanTest.class
+	ConfigPropertyAnnotationTest.class
 })
 public class DeltaspikeAllBotTests {
 }

@@ -37,35 +37,7 @@ import org.junit.runners.Suite;
  */
 @RunWith(RedDeerSuite.class)
 @Suite.SuiteClasses({
-    
-	ArchetypesTest.class,
-	
-	PerspectiveTest.class,
-	MavenProfilesTest.class,
-	MaterializeLibraryTest.class,
-
-	EARProjectTest.class,
-	JSFProjectTest.class, 
-	
-	JPAConfiguratorTest.class,
-	JSFConfiguratorTest.class,
-	CDIConfiguratorTest.class, 
-	JAXRSConfiguratorTest.class,
-	
-	MavenRepositories.class,
-	
-	MavenConversionTest.class,
-	RemoteRepositoriesPreferenceTest.class,
-	
-	//SourceLookupTest.class,
-	
-	//SeamProjectTest.class, 
-	SeamPluginsTest.class,
-	
-	APTPropertiesPageTest.class,
-	
-	SCMCheckoutProject.class
-	
+	ArchetypesTest.class
 })
 public class MavenAllBotTests {
 
