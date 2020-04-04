@@ -52,9 +52,11 @@ import org.eclipse.reddeer.junit.runner.RedDeerSuite;
 import org.eclipse.reddeer.requirements.jre.JRERequirement.JRE;
 import org.eclipse.reddeer.requirements.server.ServerRequirementState;
 import org.eclipse.reddeer.swt.api.TreeItem;
+import org.eclipse.reddeer.swt.condition.ShellIsActive;
 import org.eclipse.reddeer.swt.impl.browser.InternalBrowser;
 import org.eclipse.reddeer.swt.impl.button.PushButton;
 import org.eclipse.reddeer.swt.impl.menu.ContextMenuItem;
+import org.eclipse.reddeer.swt.impl.shell.DefaultShell;
 import org.eclipse.reddeer.swt.impl.toolbar.DefaultToolItem;
 import org.eclipse.reddeer.workbench.core.condition.JobIsRunning;
 import org.eclipse.reddeer.workbench.core.lookup.WorkbenchPartLookup;
@@ -241,7 +243,7 @@ public class HTML5Parameterized {
 			
 			// check for deployment-blocking errors
 			// -> if all of them are blacklisted -> just skip the deployment
-			// -> if at least one deployment-blocking errors is not blacklisted, fail the test
+			// -> if at least one deployment-blocking errors is not blacklisted -> fail the test
 			int deploymentBlockingErrorsCount = getDeploymentBlockingErrorsCount(currentProject);
 			if (deploymentBlockingErrorsCount > 0) {
 				return;
@@ -274,7 +276,6 @@ public class HTML5Parameterized {
 			ds.unDeployModule(topNodeProjectName, FULL_SERVER_NAME);
 		}
 		// the'inter-app' quickstart requires batch deployment and specific testing
-		// (described in the README.md)
 		else if (exampleName.equals("inter-app")) {
 			ServersView2 serversView = new ServersView2();
 			serversView.open();
@@ -297,7 +298,7 @@ public class HTML5Parameterized {
 			new PushButton("<< Remove All").click();
 			mmd2.finish();
 		}
-		// other cases
+		// other quickstarts
 		else {
 			for (Project project : findDeployableProjects()) {
 				DeployOnServer ds = new DeployOnServer();
@@ -316,7 +317,21 @@ public class HTML5Parameterized {
 		centralEditor.activate();
 		jsHelper.clickExample(exampleName);
 		NewProjectExamplesWizardDialogCentral wizardDialog = new NewProjectExamplesWizardDialogCentral();
-		wizardDialog.finish(exampleName);
+		
+		// issue JBIDE-27185
+		if (exampleName.equals("template")) {
+			try {
+				wizardDialog.finish(exampleName);
+				fail("issue JBIDE-27185 seems to be fixed");
+			} catch (RuntimeException e) {
+				new DefaultShell("Quick Fix");
+				new PushButton("Finish").click();
+				new WaitWhile(new ShellIsActive("New Project Example"));
+				new WaitWhile(new JobIsRunning(), TimePeriod.VERY_LONG);
+			}
+		} else {
+			wizardDialog.finish(exampleName);
+		}
 	}
 
 	private int getDeploymentBlockingErrorsCount(org.jboss.tools.central.reddeer.projects.Project p) {
