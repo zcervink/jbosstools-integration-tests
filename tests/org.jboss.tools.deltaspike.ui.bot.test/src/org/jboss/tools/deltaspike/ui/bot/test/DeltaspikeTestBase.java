@@ -229,13 +229,21 @@ public class DeltaspikeTestBase {
 		TextEditor e = new TextEditor();
 		new ShellMenuItem(new WithTextMatcher("Source"), new RegexMatcher("Organize Imports.*")).select();
 		
+		
+try {
+	Thread.sleep(5000);
+} catch (InterruptedException e1) {
+	// TODO Auto-generated catch block
+	e1.printStackTrace();
+}		
+		
 		e.save();
 	}
 
 	protected void openClass(String projectName, String packageName, String classFullName) {
 		ProjectExplorer pe = new ProjectExplorer();
 		pe.open();
-		pe.getProject(projectName).getProjectItem("Java Resources", "src", packageName, classFullName).open();
+		pe.getProject(projectName).getProjectItem("src", packageName, classFullName).open();
 	}
 
 	protected static void cleanProjects() {

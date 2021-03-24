@@ -80,12 +80,12 @@ public class ExceptionHandlerMethodsTest extends DeltaspikeTestBase {
 		deleteAllProjects();
 	}
 	
-	@Test
+	//@Test
 	public void testHandlerParameterType() {
 		testHandlerParameterType("handles");
 	}
 
-	@Test
+	//@Test
 	public void testBeforeHandlerParameterType() {
 		testHandlerParameterType("before-handles");
 	}

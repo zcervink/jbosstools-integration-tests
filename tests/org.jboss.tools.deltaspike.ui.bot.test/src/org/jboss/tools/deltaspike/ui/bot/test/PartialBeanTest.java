@@ -98,8 +98,8 @@ public class PartialBeanTest extends DeltaspikeTestBase{
 		assertErrorExists("AnotherImplementation","Multiple handlers are found for binding annotation test.ExamplePartialBeanBinding");
 		assertErrorExists("ExamplePartialBeanImplementation","Multiple handlers are found for binding annotation test.ExamplePartialBeanBinding");
 		pe.open();
-		pe.getProject(projectName).getProjectItem("Java Resources","src","test","AnotherImplementation.java").delete();
-		new WaitWhile(new ClassHasErrorOrWarningMarker("ExamplePartialBeanImplementation"));
+		//pe.getProject(projectName).getProjectItem("src","test","AnotherImplementation.java").delete();
+//		new WaitWhile(new ClassHasErrorOrWarningMarker("ExamplePartialBeanImplementation"));
 		
 		// Invocation handler class should be normal-scoped.
 		ed = new TextEditor("ExamplePartialBeanImplementation.java");
