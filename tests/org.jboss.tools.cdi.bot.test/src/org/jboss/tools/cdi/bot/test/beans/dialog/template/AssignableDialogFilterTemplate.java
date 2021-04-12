@@ -53,7 +53,7 @@ public class AssignableDialogFilterTemplate extends CDITestBase {
 	public void testFilterAssignableBeans() {
 		ProjectExplorer pe = new ProjectExplorer();
 		pe.open();
-		pe.getProject(getProjectName()).getProjectItem(CDIConstants.JAVA_RESOURCES, CDIConstants.SRC,
+		pe.getProject(getProjectName()).getProjectItem(CDIConstants.SRC,
 				getPackageName(), appClass).open();
 		TextEditor ed = new TextEditor(appClass);
 		ed.selectText("animal");
@@ -110,7 +110,7 @@ public class AssignableDialogFilterTemplate extends CDITestBase {
 
 		ProjectExplorer pe = new ProjectExplorer();
 		pe.open();
-		pe.getProject(getProjectName()).getProjectItem(CDIConstants.JAVA_RESOURCES, CDIConstants.SRC,
+		pe.getProject(getProjectName()).getProjectItem(CDIConstants.SRC,
 				getPackageName(), appClass).open();
 		TextEditor ed = new TextEditor(appClass);
 		ed.selectText("animal");
