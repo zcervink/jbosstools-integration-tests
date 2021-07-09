@@ -68,8 +68,8 @@ public class CDIWebProjectWizardTemplate extends CDITestBase {
 		ProjectExplorer pe = new ProjectExplorer();
 		pe.open();
 		assertTrue(pe.containsProject(PROJECT_NAME));
-		assertTrue(pe.getProject(PROJECT_NAME).containsResource("WebContent","WEB-INF","beans.xml"));
-		pe.getProject(PROJECT_NAME).getProjectItem("WebContent","WEB-INF","beans.xml").open();
+		assertTrue(pe.getProject(PROJECT_NAME).containsResource("src","main","webapp","WEB-INF","beans.xml"));
+		pe.getProject(PROJECT_NAME).getProjectItem("src","main","webapp","WEB-INF","beans.xml").open();
 		EditorPartWrapper beans = new EditorPartWrapper();
 		beans.activateSourcePage();
 		assertEquals(0,beans.getMarkers().size());
