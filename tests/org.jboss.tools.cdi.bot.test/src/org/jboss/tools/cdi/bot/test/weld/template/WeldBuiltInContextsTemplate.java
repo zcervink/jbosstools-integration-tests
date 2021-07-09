@@ -15,15 +15,22 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.List;
 
+import org.eclipse.reddeer.common.wait.TimePeriod;
 import org.eclipse.reddeer.common.wait.WaitUntil;
+import org.eclipse.reddeer.common.wait.WaitWhile;
 import org.eclipse.reddeer.eclipse.jdt.ui.wizards.NewClassCreationWizard;
 import org.eclipse.reddeer.eclipse.jdt.ui.wizards.NewClassWizardPage;
+import org.eclipse.reddeer.eclipse.jst.servlet.ui.project.facet.WebProjectFirstPage;
 import org.eclipse.reddeer.eclipse.ui.navigator.resources.ProjectExplorer;
+import org.eclipse.reddeer.swt.impl.combo.DefaultCombo;
 import org.eclipse.reddeer.workbench.condition.EditorHasValidationMarkers;
+import org.eclipse.reddeer.workbench.core.condition.JobIsRunning;
 import org.eclipse.reddeer.workbench.impl.editor.DefaultEditor;
 import org.eclipse.reddeer.workbench.impl.editor.Marker;
 import org.eclipse.reddeer.workbench.impl.editor.TextEditor;
 import org.jboss.tools.cdi.bot.test.CDITestBase;
+import org.jboss.tools.cdi.reddeer.cdi.ui.CDIProjectWizard;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -48,6 +55,11 @@ public class WeldBuiltInContextsTemplate extends CDITestBase{
 		jd.finish();
 		projectHelper.addLibrariesIntoProject(PROJECT_NAME, WELD_API_JAR, isJava11FacetActivated);
 		editResourceUtil.replaceClassContentByResource("BuiltInContexts.java", readFile("resources/cdi11/BuiltInContexts.jav_"), false);
+	}
+	
+	@After
+	public void cleanup() {
+		cleanUp();
 	}
 	
 	@Test
