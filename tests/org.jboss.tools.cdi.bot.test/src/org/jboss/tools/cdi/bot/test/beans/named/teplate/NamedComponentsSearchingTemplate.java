@@ -51,7 +51,7 @@ public abstract class NamedComponentsSearchingTemplate extends CDITestBase{
 		pe.open();
 		pe.getProject(getProjectName()).refresh();
 		if(pe.getProject(getProjectName()).
-				containsResource(CDIConstants.JAVA_RESOURCES,CDIConstants.SRC,getPackageName())){
+				containsResource(CDIConstants.SRC,CDIConstants.MAIN,CDIConstants.JAVA,getPackageName())){
 			new EditorResourceHelper().deletePackage(getProjectName(), getPackageName());
 		}
 	}
