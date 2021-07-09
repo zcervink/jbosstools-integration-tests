@@ -11,6 +11,7 @@
 package org.jboss.tools.cdi.bot.test.weld.template;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.util.List;
@@ -120,7 +121,7 @@ public class WeldExcludeTemplate extends CDITestBase{
 		// JBIDE-26793
 		if (CDIVersion.equals("2.0")) {
 			assertEquals(4, pw.getProblems(ProblemType.WARNING).size());
-			assertTrue("Issue JBIDE-26793 seems to be fixed.", pw.getProblems(ProblemType.ERROR).size() == 1
+			assertFalse("Issue JBIDE-26793 seems to be fixed.", pw.getProblems(ProblemType.ERROR).size() == 1
 					&& pw.getProblems(ProblemType.ERROR).get(0).toString().contains("cvc-complex-type.2.4.a: Invalid content was found starting with element 'weld:scan'."));
 		} else {
 			assertEquals(4, pw.getProblems(ProblemType.ALL).size());
